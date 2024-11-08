@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	// "log"
 	"os"
 	"os/signal"
 	"strconv"
@@ -17,8 +16,8 @@ import (
 )
 
 type Topic struct {
-	Name string `field:"topic"`
-	Count int64 `field:"count"`
+	Name  string `field:"topic"`
+	Count int64  `field:"count"`
 }
 
 const file string = "topics.db"
@@ -29,70 +28,65 @@ const create string = `
 	count INTEGER NOT NULL
 	);`
 
-func insertNewTopic(db *sql.DB, topic string) {
-	_, err := db.Exec("INSERT INTO topics VALUES(?, 1);", topic)
+func insertNewTopic(dbconn *sql.DB, topic string) {
+	_, err := dbconn.Exec("INSERT INTO topics VALUES(?, 1);", topic)
 	if err != nil {
 		panic(err)
 	}
-	db.Close()
+
+	defer dbconn.Close()
 }
 
-func incrementTopicCount(db *sql.DB, topic string) {
-	_, err := db.Exec("UPDATE topics SET count = count + 1 WHERE topic = ?;", topic)
+func incrementTopicCount(dbconn *sql.DB, topic string) {
+	_, err := dbconn.Exec("UPDATE topics SET count = count + 1 WHERE topic = ?;", topic)
 	if err != nil {
 		panic(err)
 	}
-	db.Close()
+
+	defer dbconn.Close()
 }
 
-
-func onMessageReceived(client MQTT.Client, message MQTT.Message) {
-	//fmt.Printf("Received message on topic: %s\nMessage: %s\n\n\n", message.Topic(), message.Payload())
-	//fmt.Printf("%s\n\n", message.Topic())
-
-	db, err := sql.Open("sqlite3", file)
+func onMessageReceived(_ MQTT.Client, message MQTT.Message) {
+	dbconn, err := sql.Open("sqlite3", file)
 	if err != nil {
 		panic(err)
 	}
 
-	messageTopic := Topic {}
-	messageTopic.Name = message.Topic()
-	messageTopic.Count = 1
+	messageTopic := Topic{
+		Name:  message.Topic(),
+		Count: 1,
+	}
 
 	query := `SELECT topic FROM topics WHERE topic = ?`
 	topic := messageTopic.Name
 
-	rows, err := db.Query(query, topic)
+	rows, err := dbconn.Query(query, topic)
 	if err != nil {
-		rows.Close()
+		defer rows.Close()
 		panic(err)
 	}
 
 	if rows.Next() {
-		rows.Close()
-		incrementTopicCount(db, topic)
+		defer rows.Close()
+		incrementTopicCount(dbconn, topic)
 	} else {
-		rows.Close()
-		insertNewTopic(db, topic)
+		defer rows.Close()
+		insertNewTopic(dbconn, topic)
 	}
-
 }
 
 func main() {
-	// MQTT.DEBUG = log.New(os.Stdout, "", 0)
-	// MQTT.ERROR = log.New(os.Stdout, "", 0)
-
-	db, err := sql.Open("sqlite3", file)
+	dbconn, err := sql.Open("sqlite3", file)
 	if err != nil {
 		panic(err)
 	}
 
-	if _, err := db.Exec(create); err != nil {
+	if _, err := dbconn.Exec(create); err != nil {
 		panic(err)
 	}
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	channel := make(chan os.Signal, 1)
+	signal.Notify(channel, os.Interrupt, syscall.SIGTERM)
 
 	hostname, _ := os.Hostname()
 
@@ -110,6 +104,7 @@ func main() {
 	if ret {
 		connOpts.SetUsername(user)
 	}
+
 	pass, ret := os.LookupEnv("MQTT_PASSWORD")
 	if ret {
 		connOpts.SetPassword(pass)
@@ -119,6 +114,7 @@ func main() {
 	if *username != "" {
 		connOpts.SetUsername(*username)
 	}
+
 	if *password != "" {
 		connOpts.SetPassword(*password)
 	}
@@ -126,8 +122,8 @@ func main() {
 	tlsConfig := &tls.Config{InsecureSkipVerify: true, ClientAuth: tls.NoClientCert}
 	connOpts.SetTLSConfig(tlsConfig)
 
-	connOpts.OnConnect = func(c MQTT.Client) {
-		if token := c.Subscribe(*topic, byte(*qos), onMessageReceived); token.Wait() && token.Error() != nil {
+	connOpts.OnConnect = func(channel MQTT.Client) {
+		if token := channel.Subscribe(*topic, byte(*qos), onMessageReceived); token.Wait() && token.Error() != nil {
 			panic(token.Error())
 		}
 	}
@@ -135,10 +131,9 @@ func main() {
 	client := MQTT.NewClient(connOpts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
-	} else {
-		fmt.Printf("Connected to %s\n", *server)
 	}
 
-	<-c
-}
+	fmt.Printf("Connected to %s\n", *server)
 
+	<-channel
+}
