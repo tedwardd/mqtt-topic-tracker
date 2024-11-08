@@ -28,4 +28,26 @@ $ make docker
 make podman
 ```
 
+# Run
 
+## Local
+
+### No auth
+
+```
+$ build/mqtt-topic-tracker
+```
+
+### USER/PASS Required
+
+There are two ways to pass username and password; command line arguments or environment variables. You can mix and match them however you like but command line args will always take precedence over environment variables.
+
+#### Args
+```
+$ build/mqtt-topic-tracker --username=MY_USER --password=MY_PASS
+```
+
+#### Env Var
+```
+$ MQTT_USERNAME=MY_USER MQTT_PASSWORD=MY_PASS build/mqtt-topic-tracker
+```
