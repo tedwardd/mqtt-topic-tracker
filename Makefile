@@ -12,7 +12,7 @@ deps:
 
 build:
 	$(MAKE) deps
-	go build -o build/${BINARY_NAME} src/main.go
+	go build -o build/${BINARY_NAME} ./cmd/mqtt-topic-tracker
 
 docker:
 	docker build -t ${BINARY_NAME} .
