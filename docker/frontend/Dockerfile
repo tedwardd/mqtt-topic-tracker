@@ -14,5 +14,7 @@ FROM debian:latest
 COPY --from=builder /mqtt-topic-frontend /bin/mqtt-topic-frontend
 RUN chmod +x /bin/mqtt-topic-frontend
 
+EXPOSE 8080
+
 ENTRYPOINT ["/bin/mqtt-topic-frontend"]
 
