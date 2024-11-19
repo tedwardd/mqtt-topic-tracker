@@ -1,4 +1,5 @@
-BINARY_NAME=mqtt-topic-tracker
+LOGGER=mqtt-topic-tracker
+FRONTEND=mqtt-topic-frontend
 
 .PHONY: list deps build docker podman vendor lint clean
 list:
@@ -10,15 +11,26 @@ list:
 deps:
 	go mod download
 
+logger:
+	$(MAKE) deps
+	go build -o build/${LOGGER} ./cmd/mqtt-topic-tracker
+
+frontend:
+	$(MAKE) deps
+	go build -o build/${FRONTEND} ./cmd/frontend
+
 build:
 	$(MAKE) deps
-	go build -o build/${BINARY_NAME} ./cmd/mqtt-topic-tracker
+	go build -o build/${LOGGER} ./cmd/mqtt-topic-tracker
+	go build -o build/${FRONTEND} ./cmd/frontend
 
 docker:
-	docker build -t ${BINARY_NAME} .
+	docker build -t ${LOGGER} docker/logger
+	docker build -t ${FRONTEND} docker/frontend
 
 podman:
-	podman build -t ${BINARY_NAME} .
+	podman build -t ${LOGGER} docker/logger
+	podman build -t ${FRONTEND} docker/frontend
 
 vendor:
 	go mod tidy
