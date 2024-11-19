@@ -1,5 +1,6 @@
 LOGGER=mqtt-topic-tracker
 FRONTEND=mqtt-topic-frontend
+GIT_ROOT=$(shell git rev-parse --show-toplevel)
 
 .PHONY: list deps build docker podman vendor lint clean
 list:
@@ -25,12 +26,20 @@ build:
 	go build -o build/${FRONTEND} ./cmd/frontend
 
 docker:
-	docker build -t ${LOGGER} docker/logger
-	docker build -t ${FRONTEND} docker/frontend
+	cp ${GIT_ROOT}/docker/logger/Dockerfile ${GIT_ROOT}/Dockerfile
+	docker build -t ${LOGGER} .
+	rm ${GIT_ROOT}/Dockerfile
+	cp ${GIT_ROOT}/docker/frontend/Dockerfile ${GIT_ROOT}/Dockerfile
+	docker build -t ${FRONTEND} .
+	rm ${GIT_ROOT}/Dockerfile
 
 podman:
-	podman build -t ${LOGGER} docker/logger
-	podman build -t ${FRONTEND} docker/frontend
+	cp ${GIT_ROOT}/docker/logger/Dockerfile ${GIT_ROOT}/Dockerfile
+	podman build -t ${LOGGER} .
+	rm ${GIT_ROOT}/Dockerfile
+	cp ${GIT_ROOT}/docker/frontend/Dockerfile ${GIT_ROOT}/Dockerfile
+	podman build -t ${FRONTEND} .
+	rm ${GIT_ROOT}/Dockerfile
 
 vendor:
 	go mod tidy
