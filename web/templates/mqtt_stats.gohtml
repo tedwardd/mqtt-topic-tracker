@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <title>{{.PageTitle}}</title>
+    <style>
+      table, th, td {
+          border: 1px solid black;
+          border-collapse: collapse;
+        }
+    </style>
+  </head>
+  <body>
+    <a href="https://techmachine.net">Home</a>
+    <table>
+      <tr>
+        <th>Topic</th>
+        <th>Count</th>
+      </tr>
+      {{range .Topics}}
+      <tr>
+      <td>{{.Name}}</td>
+      <td>{{.Count}}</td>
+      </tr>
+      {{end}}
+    </table>
+  </body>
+</html>
