@@ -45,6 +45,10 @@ vendor:
 	go mod tidy
 	go mod vendor
 
+test:
+	go test ${GIT_ROOT}/cmd/frontend
+	go test ${GIT_ROOT}/cmd/mqtt-topic-tracker
+
 lint:
 	golangci-lint run --enable-all
 
