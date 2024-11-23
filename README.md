@@ -1,6 +1,23 @@
-# MQTT Topic Tracker
 
+# MQTT Topic Tracker
 Subscribes and listens to an MQTT broker and logs what and how many times topics are seen
+
+# Quickstart
+
+## Prerequisites
+* docker or podman
+* docker-compose or podman-compose
+* Make
+
+## Edit, Build, Run
+Edit `docker-compose.yml` and edit environment variables for your environment
+```
+mkdir mqtt_data
+make docker
+docker-compose up -d
+```
+
+---
 
 # Build
 
