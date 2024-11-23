@@ -1,0 +1,28 @@
+services:
+  tracker:
+    image: mqtt-topic-tracker:latest
+    environment:
+      - MQTT_USERNAME=<username>
+      - MQTT_PASSWORD=<password>
+      - MQTT_SERVER=<server>:<port>
+    restart: always
+    command: /bin/mqtt-topic-tracker --db /mqtt_data/topics.db
+    volumes:
+      - type: bind
+        source: /mqtt_data
+        target: /mqtt_data
+
+  frontend:
+    image: mqtt-topic-frontend:latest
+    ports:
+      - 8080:8080
+    restart: always
+    command: /bin/mqtt-topic-frontend --db /mqtt_data/topics.db
+    volumes:
+      - type: bind
+        source: /mqtt_data
+        target: /mqtt_data
+      - type: bind
+        source: ./mqtt-topic-tracker/web
+        target: /web
+
