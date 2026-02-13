@@ -108,7 +108,7 @@ func run(c *cobra.Command, basics *commandBasics) {
 		l.Errorf("Unable to parse QoS value")
 	}
 
-	messages.DbConn, ret = os.LookupEnv("MQTT_CLIENTID")
+	messages.DbConn, ret = os.LookupEnv("MQTT_DB")
 	messages.Logger = l
 	if !ret {
 		messages.DbConn = c.Flag("db").Value.String()
